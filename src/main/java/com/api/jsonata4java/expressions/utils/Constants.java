@@ -297,10 +297,12 @@ public class Constants {
    public static final String ERR_MSG_ARG3_BAD_TYPE = "Argument 3 of function %s does not match function signature";
    public static final String ERR_MSG_ARG4_BAD_TYPE = "Argument 4 of function %s does not match function signature";
    public static final String ERR_MSG_ARG5_BAD_TYPE = "Argument 5 of function %s does not match function signature";
+   public static final String ERR_MSG_RETURN_BAD_TYPE = "Return value of function %s does not match function signature";
+   public static final String ERR_MSG_TOO_MANY_ARGS = "Too many arguments passed to function %s";
    public static final String ERR_MSG_ARG1_ARR_STR = "Argument 1 of function %s must be an array of string";
    public static final String ERR_MSG_ARG2_EMPTY_STR = "Second argument of function %s cannot be an empty string";
    public static final String ERR_MSG_INVALID_RADIX = "The radix of the $formatBase function must be between 2 and 36";
-   public static final String ERR_MSG_RUNTIME_ERROR = "A runtime error occurred when invoking funtion %s";
+   public static final String ERR_MSG_RUNTIME_ERROR = "A runtime error occurred when invoking function %s";
    public static final String ERR_MSG_INVALID_OPTIONS_SINGLE_CHAR = "Argument 3 of function %s is invalid. The value of the %s property must be a single character";
    public static final String ERR_MSG_INVALID_OPTIONS_STRING = "Argument 3 of function %s is invalid. The value of the %s property must be a string";
    public static final String ERR_MSG_INVALID_OPTIONS_UNKNOWN_PROPERTY = "Argument 3 of function %s is invalid. %s is not a valid property name";

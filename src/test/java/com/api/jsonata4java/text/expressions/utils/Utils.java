@@ -31,8 +31,12 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.Consumer;
+
 import org.junit.Assert;
 
+import com.api.jsonata4java.Evaluatable;
+import com.api.jsonata4java.Expression;
 import com.api.jsonata4java.expressions.EvaluateException;
 import com.api.jsonata4java.expressions.Expressions;
 import com.api.jsonata4java.expressions.ParseException;
@@ -161,26 +165,91 @@ public class Utils {
 				return;
 			}
 		}
+		evaluateAndAssert(e, rootContext, expected, expectedEvaluateExceptionMsg);
+	}
+
+	/**
+	 * Tests evaluation of the expression against the rootContext to determine if we get the expected
+	 * results or exception to be thrown
+	 * @param expression expression to be tested
+	 * @param preEvalActions actions to be performed on the Expression prior to evaluation
+	 * @param expected result expected
+	 * @param expectedExceptionMsg the text of an expected exception
+	 * @param rootContext the json object against which the expression is evalated
+	 * @throws Exception if expected values are not provided
+	 */
+	public static void preEvalTest(String expression, Consumer<Expression> preEvalActions,
+									   String expected, String expectedExceptionMsg,
+									   String rootContext)
+		throws Exception {
+		preEvalTest(expression, preEvalActions,
+			expected != null ? mapper.readTree(expected) : null,
+			expectedExceptionMsg,
+			rootContext == null ? null : mapper.readTree(rootContext));
+	}
+
+	/**
+	 * Tests evaluation of the expression against the rootContext to determine if we get the expected
+	 * results or exception to be thrown.
+	 * @param expression expression to be tested
+	 * @param preEvalActions actions to be performed on the Expression prior to evaluation
+	 * @param expected result expected
+	 * @param expectedEvaluateExceptionMsg the text of an expected exception
+	 * @param rootContext the json object against which the expression is evalated
+	 * @throws Exception if expected values are not provided
+	 */
+	public static void preEvalTest(String expression, Consumer<Expression> preEvalActions,
+								   JsonNode expected, String expectedEvaluateExceptionMsg,
+								   JsonNode rootContext) throws Exception {
+		if (expected != null)
+			expected = ensureAllIntegralsAreLongs(expected);
+		if (rootContext != null)
+			ensureAllIntegralsAreLongs(rootContext);
+
+		System.err.print("* " + expression);
+		Expression e = null;
+		try {
+			e = Expression.jsonata(expression);
+		} catch (ParseException pe) {
+			if (expectedEvaluateExceptionMsg == null) {
+				Assert.fail("EvaluateException was thrown but was not expected: " + pe.getLocalizedMessage());
+			} else {
+				if (expectedEvaluateExceptionMsg.equals(pe.getClass().getName()) == false) {
+					pe.printStackTrace();
+					throw pe;
+				}
+				System.err.println(" threw exception: "+pe.getClass().getName());
+				return;
+			}
+		}
+		if (preEvalActions != null) preEvalActions.accept(e);
+		evaluateAndAssert(e, rootContext, expected, expectedEvaluateExceptionMsg);
+	}
+
+	private static void evaluateAndAssert(Evaluatable expression,
+										  JsonNode rootContext,
+										  JsonNode expected,
+										  String expectedEvaluateExceptionMsg) throws EvaluateException
+	{
 		JsonNode actual = null;
 		try {
-			actual = e.evaluate(rootContext);
+			actual = expression.evaluate(rootContext);
 			if (expectedEvaluateExceptionMsg != null) {
 				Assert.fail("EvaluateException \"" + expectedEvaluateExceptionMsg
-						+ "\" was not thrown but we expected it to be. Got actual=\"" + actual + "\"");
+					+ "\" was not thrown but we expected it to be. Got actual=\"" + actual + "\"");
 			}
 			System.err.println(" returned "+actual);
 			Assert.assertEquals(expected, actual);
-		} catch (EvaluateException ex) {
+		} catch (Exception ex) {
 			if (expectedEvaluateExceptionMsg == null) {
 				System.err.println(" expected:\"" + expected + "\" but got \"" + actual + "\"");
 				throw ex;
 			} else {
-			   System.err.println(" got exception with message "+ex.getLocalizedMessage());
+				System.err.println(" got exception with message "+ex.getLocalizedMessage());
 				Assert.assertEquals("EvaluateException was thrown as expected, but its message was not as expected",
-						expectedEvaluateExceptionMsg, ex.getMessage());
+					expectedEvaluateExceptionMsg, ex.getMessage());
 			}
 		}
-
 	}
 
 	/**

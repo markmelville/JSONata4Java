@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import com.api.jsonata4java.Evaluatable;
 import com.api.jsonata4java.expressions.generated.MappingExpressionLexer;
 import com.api.jsonata4java.expressions.generated.MappingExpressionParser;
 import com.api.jsonata4java.expressions.utils.Constants;
@@ -40,7 +41,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 @SuppressWarnings("deprecation")
-public class Expressions {
+public class Expressions implements Evaluatable
+{
 	ParseTree tree = null;
 	String expression = null;
 	ExpressionsVisitor _eval = new ExpressionsVisitor(JsonNodeFactory.instance.objectNode());

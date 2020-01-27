@@ -341,6 +341,7 @@ public class ExpressionsVisitor extends MappingExpressionBaseVisitor<JsonNode> {
 
    JsonNodeFactory factory = JsonNodeFactory.instance;
    private Map<String, DeclaredFunction> functionMap = new HashMap<String, DeclaredFunction>();
+   private Map<String, Function> javaFunctionMap = new HashMap<>();
 
    /**
     * This stack is used for storing the current "context" under which to evaluate
@@ -429,6 +430,10 @@ public class ExpressionsVisitor extends MappingExpressionBaseVisitor<JsonNode> {
 
    public Map<String, DeclaredFunction> getFunctionMap() {
       return functionMap;
+   }
+
+   public Map<String, Function> getJavaFunctionMap() {
+      return javaFunctionMap;
    }
 
    public Stack<JsonNode> getStack() {
@@ -1373,7 +1378,7 @@ public class ExpressionsVisitor extends MappingExpressionBaseVisitor<JsonNode> {
       JsonNode result = null;
       String functionName = ctx.VAR_ID().getText();
 
-      Function function = Constants.FUNCTIONS.get(functionName);
+      Function function = Constants.FUNCTIONS.getOrDefault(functionName, javaFunctionMap.get(functionName));
       if (function != null) {
          result = function.invoke(this, ctx);
       } else {

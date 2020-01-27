@@ -16,6 +16,9 @@ import com.api.jsonata4java.expressions.Expressions;
 import com.api.jsonata4java.expressions.ExpressionsVisitor;
 import com.api.jsonata4java.expressions.ParseException;
 import com.api.jsonata4java.expressions.functions.DeclaredFunction;
+import com.api.jsonata4java.expressions.functions.Function;
+import com.api.jsonata4java.expressions.functions.JavaFunction;
+import com.api.jsonata4java.expressions.functions.TypedFunction;
 import com.api.jsonata4java.expressions.generated.MappingExpressionParser.ExprContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +28,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 /**
  * Class to provide embedding and extending JSONata features
  */
-public class Expression {
+public class Expression implements Evaluatable {
 
    /**
     * Genearte a new Expression based on evaluating the supplied expression
@@ -95,6 +98,7 @@ public class Expression {
    Expressions _expr = null;
    Map<String, DeclaredFunction> _functionMap = new HashMap<String, DeclaredFunction>();
    Map<String, ExprContext> _variableMap = new HashMap<String, ExprContext>();
+   final Map<String, Function> _javaFunctionMap = new HashMap<>();
 
    /**
     * Constructor for Expression
@@ -139,6 +143,19 @@ public class Expression {
    }
 
    /**
+    * Assign a TypedFunction to a variable name.
+    *
+    * @param varname
+    *                   name to map to the function
+    * @param function
+    *                   the function to invoke
+    */
+   public <R> void assign(String varname, TypedFunction<JsonNode> function) {
+      String prefixedVarname = varname.startsWith("$") ? varname : "$" + varname;
+      _javaFunctionMap.put(prefixedVarname, new JavaFunction(prefixedVarname, function));
+   }
+
+   /**
     * Generate a result form the Expression's parsed expression and variable
     * assignments or registered functions
     * 
@@ -148,9 +165,8 @@ public class Expression {
     * @return the result from executing the Expression's parsed expression and
     *         variable assignments or registered functions
     * @throws EvaluateException
-    * @throws ParseException
     */
-   public JsonNode evaluate(JsonNode rootContext) throws EvaluateException, ParseException {
+   public JsonNode evaluate(JsonNode rootContext) throws EvaluateException {
       ExpressionsVisitor eval = new ExpressionsVisitor(rootContext);
       Map<String, JsonNode> varMap = eval.getVariableMap();
       Map<String, DeclaredFunction> fctMap = eval.getFunctionMap();
@@ -165,6 +181,7 @@ public class Expression {
          DeclaredFunction fct = _functionMap.get(key);
          fctMap.put(key, fct);
       }
+      eval.getJavaFunctionMap().putAll(_javaFunctionMap);
       return eval.visit(_expr.getTree());
    }
 
